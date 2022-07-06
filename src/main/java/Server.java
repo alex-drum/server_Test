@@ -15,15 +15,13 @@ public class Server {
     private static final String dbUser = "root";
     private static final String dbPassword = "haizi2011";
 
+    public String fetchQuery = "SELECT * FROM testDB.user";
+    public String insertQuery = "INSERT INTO `testDB`.`user` (`name`, `password`, `isLogged`) VALUES ('sdffsd', 'asdadf', '1');";
+    public String deleteQuery = "INSERT INTO `testDB`.`user` (`name`, `password`, `isLogged`) VALUES (NULL, 'arkjga', '1');";
+
     private static Connection con;
     private static Statement stmt;
     private static ResultSet rs;
-//    private List<ClientHandler> clients;
-//    private AuthService authService;
-//
-//    public AuthService getAuthService() {
-//        return authService;
-//    }
 
     public Server() {
         try (ServerSocket server = new ServerSocket(PORT)) {
@@ -32,6 +30,10 @@ public class Server {
                 Socket socket = server.accept();
                 System.out.println("Client connected");
 //                new ClientHandler(this, socket);
+
+                // достаем значения из базы данных
+                JSONArray jsonArray = getResultsJSONArray(fetchQuery);
+                System.out.println(jsonArray);
             }
         } catch (IOException ex) {
             System.out.println("Server error");
