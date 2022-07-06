@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Server {
     private final int PORT = 8189;
@@ -29,7 +27,7 @@ public class Server {
                 System.out.println("Server awaits clients");
                 Socket socket = server.accept();
                 System.out.println("Client connected");
-//                new ClientHandler(this, socket);
+                new ClientHandler(this, socket);
 
                 // достаем значения из базы данных
                 JSONArray jsonArray = getResultsJSONArray(fetchQuery);

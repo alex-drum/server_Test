@@ -1,6 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -16,6 +14,11 @@ public class Client {
             Socket socket = new Socket("localhost", 8189);
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            boolean isNewUser = isNewUser();
+            if (isNewUser) {
+                boolean isNameVacant = isNameVacant();
+            }
             out.writeUTF("/auth login1 pass1");
 //            setAuthorized(false);
             Thread t = new Thread(new Runnable() {
@@ -23,7 +26,7 @@ public class Client {
                 public void run() {
                     try {
                         while (true) {
-                            if(in.available()>0) {
+                            if (in.available() > 0) {
                                 String strFromServer = in.readUTF();
                                 if (strFromServer.startsWith("/authOk")) {
 //                                    setAuthorized(true);
@@ -35,7 +38,7 @@ public class Client {
                             }
                         }
                         while (true) {
-                            if (in.available()>0) {
+                            if (in.available() > 0) {
                                 String strFromServer = in.readUTF();
                                 if (strFromServer.equalsIgnoreCase("/end")) {
                                     break;
@@ -56,8 +59,34 @@ public class Client {
         }
     }
 
+    private static boolean isNameVacant() {
+        System.out.println("Please enter your nickname: ");
+        String userName = null;
+        try {
+            userName = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(userName);
+        return false;
+    }
+
+    private static boolean isNewUser() {
+        System.out.println("Are you a registered user? (Y/N)");
+        String answer = null;
+        try {
+            answer = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (answer.equalsIgnoreCase("N")) {
+            return true;
+        } else return false;
+    }
+
+
     private static Thread runOutputThread(DataOutputStream out) {
-        Thread thread = new Thread(()-> {
+        Thread thread = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 Scanner scanner = new Scanner(System.in);
                 while (true) {
