@@ -1,5 +1,7 @@
 package withoutHandler;
 
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.UnknownHostException;
 
@@ -21,8 +23,6 @@ public class Client {
             } else {
                 signIn(handler);
             }
-
-
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -31,40 +31,65 @@ public class Client {
     }
 
     private static void signIn(Handler handler) {
-        boolean isNameVacant = validate(handler);
+       String name = validateName(handler);
+        checkIn(name, handler);
+
     }
 
-    private static boolean validate(Handler handler) {
-        System.out.println("Please enter you name, we would firs validate it: ");
-        String name = null;
-        try {
-            name = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private static void checkIn(String name, Handler handler) {
+       String password = "";
+        System.out.println("Please enter your password: ");
+       try {
+           password = new BufferedReader(new InputStreamReader(System.in)).readLine();
+       } catch (IOException e) {
+           e.printStackTrace();
+       }
+        JSONObject newUser = new JSONObject();
+       newUser.put("name", name);
+       newUser.put("password", password);
+       newUser.put("isLogged", 1);
+       System.out.println(newUser.toString());
+       handler.write(newUser.toString());
+    }
+
+    private static String validateName(Handler handler) {
+        String isVacant = "";
+        while (!isVacant.equalsIgnoreCase("true")) {
+            System.out.println("Please enter you name, we would first validate it: ");
+            String name = "";
+            try {
+                name = new BufferedReader(new InputStreamReader(System.in)).readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            handler.write(name);
+            isVacant = handler.read();
+
+            if (isVacant.equalsIgnoreCase("true")) {
+                System.out.println("The name \"" + name + "\" is vacant!");
+                return name;
+            } else {
+                System.out.println("The name \"" + name + "\" is used, try another one!");
+            }
         }
-        handler.write(name);
-        String isVacant = handler.read();
-        if (isVacant.equalsIgnoreCase("true")) {
-            System.out.println("The name " + name + " is vacant!");
-            return true;
-        } else {
-            System.out.println("The name " + name + " is used, try another one!");
-            return false;
-        }
+        return null;
     }
 
     private static boolean checkIfRegistered(Handler handler) {
-        System.out.println("SIGN IN (S) / LOG IN (L)");
-        String request = null;
-        try {
-            request = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (request.equalsIgnoreCase("S")) {
-            return false;
-        } else if (request.equalsIgnoreCase("L")) {
-            return true;
+        String request = "";
+        while (!request.equalsIgnoreCase("S") ||
+                !request.equalsIgnoreCase("L") ) {
+            System.out.println("SIGN IN (S) / LOG IN (L)");
+            try {
+                request = new BufferedReader(new InputStreamReader(System.in)).readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (request.equalsIgnoreCase("S")) {
+                return false;
+            } else if (request.equalsIgnoreCase("L")) {
+                return true;
+            }
         }
         return false;
     }
