@@ -48,8 +48,9 @@ public class Client {
        newUser.put("name", name);
        newUser.put("password", password);
        newUser.put("isLogged", 1);
-       System.out.println(newUser.toString());
        handler.write(newUser.toString());
+       String response = handler.read();
+        System.out.println(response);
     }
 
     private static String validateName(Handler handler) {
