@@ -1,3 +1,5 @@
+package WithHandler_Error;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,21 +22,31 @@ public class ClientHandler {
             try {
                 this.in = new DataInputStream(socket.getInputStream());
                 this.out = new DataOutputStream(socket.getOutputStream());
-               while (true) {
+               while (!Client.authorized) {
                    if (in.available() > 0) {
                        String nameToCheck = in.readUTF();
                        boolean isNameVacant = isNameVacant(nameToCheck);
-                       System.out.println(nameToCheck + "is vacant? - " + isNameVacant);
+                       System.out.println(nameToCheck + " is vacant? - " + isNameVacant);
+//
+                       if (isNameVacant) {
+                           Client.authorized = true;
+                           out.writeBoolean(true);
+                            String password = in.readUTF(); // ОШИБКА!!!
+                           System.out.println("password: " + password);
+
+                       } else {
+                           out.writeBoolean(false);
+                       }
                    }
                }
-//                        authenticate();
-//                        readMessages();
+
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//                    finally {             // TODO потом надо понять, в какой момент раскомментить
-//                        closeConnection();
-//                    }
+                    finally {
+                        closeConnection();
+                    }
         }).start();
     }
 

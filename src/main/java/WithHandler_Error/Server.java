@@ -1,3 +1,5 @@
+package WithHandler_Error;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -24,9 +26,9 @@ public class Server {
     public Server() {
         try (ServerSocket server = new ServerSocket(PORT)) {
             while (true) {
-                System.out.println("Server awaits clients");
+                System.out.println("WithHandler_Error.Server awaits clients");
                 Socket socket = server.accept();
-                System.out.println("Client connected");
+                System.out.println("WithHandler_Error.Client connected");
                 new ClientHandler(this, socket);
 
                 // достаем значения из базы данных
@@ -34,7 +36,7 @@ public class Server {
                 System.out.println(jsonArray);
             }
         } catch (IOException ex) {
-            System.out.println("Server error");
+            System.out.println("WithHandler_Error.Server error");
         }
     }
 
@@ -65,22 +67,22 @@ public class Server {
     }
 
 
-//    public synchronized void unsubscribe(ClientHandler clientHandler) {
+//    public synchronized void unsubscribe(WithHandler_Error.ClientHandler clientHandler) {
 //        clients.remove(clientHandler);
 //    }
 
-//    public synchronized void subscribe(ClientHandler clientHandler) {
+//    public synchronized void subscribe(WithHandler_Error.ClientHandler clientHandler) {
 //        clients.add(clientHandler);
 //    }
 
 //    public synchronized void broadcast(String s) {
-//        for(ClientHandler client: clients) {
+//        for(WithHandler_Error.ClientHandler client: clients) {
 //            client.sendMsg(s);
 //        }
 //    }
 //
 //    public synchronized boolean isNickLogged(String nick) {
-//        for(ClientHandler client: clients) {
+//        for(WithHandler_Error.ClientHandler client: clients) {
 //            if (client.getName().equals(nick)) {
 //                return true;
 //            }
