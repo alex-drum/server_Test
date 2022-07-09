@@ -2,8 +2,6 @@ package withoutHandler;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jdk.nashorn.internal.parser.JSONParser;
-import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -34,8 +32,15 @@ public class Server {
                 try (
                         Handler handler = new Handler(server);
                 ) {
-                    checkUser(handler);
-                    signIn(handler);
+                    String request = handler.read();
+                    System.out.println("Request: " + request);
+                    if (request.equals("/checkIn")) {
+                        checkUser(handler);
+                        signIn(handler);
+                    } else if (request.equals("/logIn")) {
+                        logIn(handler);
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -45,20 +50,86 @@ public class Server {
         }
     }
 
-    private void signIn(Handler handler) {
+    private static boolean checkUserAndPassword(String name, String password,Handler handler) {
+        try {
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT * FROM testDB.user WHERE (`name` = '" + name + "')");
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            int columnCount = rsmd.getColumnCount();
+
+            JSONObject user = new JSONObject();
+            if (resultSet.next()) {
+                for (int j = 1; j < columnCount + 1; j++) {
+                    String key = rsmd.getColumnLabel(j);
+                    user.put(key, resultSet.getObject(key));
+                }
+                System.out.println("Line67 (jsonObject to check: )" + user.toString());
+            }
+            boolean isNameValid = false;
+            boolean isPasswordValid = false;
+            if (name.equals(user.getString("name"))) {
+                isNameValid = true;
+            } else {
+                System.out.println("User nickname is invalid, please try again: ");
+                handler.write("User nickname is invalid, please try again: ");
+            }
+            if (password.equals(user.getString("password"))) {
+                isPasswordValid = true;
+            } else {
+                System.out.println("User password is invalid, please try again: ");
+                handler.write("User password is invalid, please try again: ");
+            }
+            if (isNameValid && isPasswordValid) {
+                return true;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
+
+    private static void logIn(Handler handler) {
+        String userJSONString = handler.read();
+        JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
+        String name = user.get("name").getAsString();
+        String password = user.get("password").getAsString();
+
+        boolean isUserAndPasswordValid = checkUserAndPassword(name, password, handler);
+        if (isUserAndPasswordValid) {
+            String query = "UPDATE `testDB`.`user` SET `isLogged` = '1' WHERE (`name` = '"
+                    + user.get("name").getAsString() + "')";
+            System.out.println(query);
+
+            try {
+                connection = DriverManager.getConnection(url, dbUser, dbPassword);
+                statement = connection.createStatement();
+                int i = statement.executeUpdate(query);
+                if (i > 0) {
+                    System.out.println("ROW UPDATED");
+                    handler.write("Log-in successful");
+                } else {
+                    System.out.println("ROW NOT UPDATED");
+                    handler.write("Log-in failed");
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        } else {
+            // TODO: прописать 10 попыток ввести логин и пароль
+        }
+    }
+    private static void signIn(Handler handler) {
         String newUserJSONString = handler.read();
-        System.out.println(newUserJSONString);
         JsonObject newUser = new JsonParser().parse(newUserJSONString).getAsJsonObject();
-        System.out.println("JSON Object: " + newUser.get("name").getAsString());
 
         String query = "insert into `testDB`.`user` (`name`, `password`, `isLogged`) VALUES " +
                 "('" + newUser.get("name").getAsString() + "','"
                 + newUser.get("password").getAsString()
                 + "','" + newUser.get("isLogged") + "')";
-//        System.out.println(query);
 
         try {
-            connection = DriverManager.getConnection(url,dbUser,dbPassword);
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
             int i = statement.executeUpdate(query);
             if (i > 0) {
@@ -85,18 +156,13 @@ public class Server {
     }
     private static boolean validateName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
-//        System.out.println(users.toString());
         boolean flag = false;
         for (int i = 0; i < users.length(); i++) {
             JSONObject user = users.getJSONObject(i);
-//            System.out.println(user.toString());
-//            System.out.println(user.getString("name"));
             if (name.equals(user.getString("name"))) {
                 flag = false;
-//                System.out.println("Nickname \"" + name + "\" is already in use. Try another one.");
                 return flag;
             } else {
-//                System.out.println("Nickname \"" + name + "\" is vacant.");
                 flag = true;
             }
         }
@@ -109,7 +175,7 @@ public class Server {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
-            Integer i = 0;
+            int i = 0;
             ResultSetMetaData rsmd = resultSet.getMetaData();
             int columnCount = rsmd.getColumnCount();
             while (resultSet.next()) {
@@ -117,7 +183,6 @@ public class Server {
                 for (int j = 1; j < columnCount + 1; j++) {
                     String key = rsmd.getColumnLabel(j);
                     jsonObject.put(key, resultSet.getObject(key));
-                    System.out.println(jsonObject.toString());
                 }
                 jsonArray.put(i, jsonObject);
                 i++;

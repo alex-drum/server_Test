@@ -18,9 +18,10 @@ public class Client {
            boolean isRegistered = checkIfRegistered(handler);
 
             if (isRegistered) {
-                handler.write("We are ready to log in!");
-//                logIn(String name, String password);
+                handler.write("/logIn");
+                logIn(handler);
             } else {
+                handler.write("/checkIn");
                 signIn(handler);
             }
         } catch (UnknownHostException e) {
@@ -30,12 +31,34 @@ public class Client {
         }
     }
 
+    private static void logIn(Handler handler) {
+        System.out.println("Please enter your nickname: ");
+        String name = "";
+        try {name = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Please enter your password: ");
+        String password = "";
+        try {password = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JSONObject user = new JSONObject();
+        user.put("name", name);
+        user.put("password", password);
+        user.put("isLogged", 1);
+
+        handler.write(user.toString());
+        String response = handler.read();
+        System.out.println(response);
+    }
     private static void signIn(Handler handler) {
        String name = validateName(handler);
         checkIn(name, handler);
 
     }
-
     private static void checkIn(String name, Handler handler) {
        String password = "";
         System.out.println("Please enter your password: ");
@@ -52,7 +75,6 @@ public class Client {
        String response = handler.read();
         System.out.println(response);
     }
-
     private static String validateName(Handler handler) {
         String isVacant = "";
         while (!isVacant.equalsIgnoreCase("true")) {
@@ -75,7 +97,6 @@ public class Client {
         }
         return null;
     }
-
     private static boolean checkIfRegistered(Handler handler) {
         String request = "";
         while (!request.equalsIgnoreCase("S") ||
@@ -95,75 +116,6 @@ public class Client {
         return false;
     }
 
-
 }
-
-            /*boolean isNewUser = isNewUser();
-            if(isNewUser) {
-                userName = getUserName();
-                JSONArray allUsers = Server.getJsonArray();
-                System.out.println(allUsers);
-                boolean isNameVacant =  isNameVacant(userName, allUsers);
-                while (isNameVacant == false) {
-                    userName = getUserName();
-                    isNameVacant =  isNameVacant(userName, allUsers);
-                }
-                System.out.println("Vacant!!!");
-                System.out.println(userName);
-                password = getPassword();
-                String newUserJSONString = "{\"password\":\"" + password +
-                        "\",\"name\":\"" + userName + "\",\"isLogged\":1}";
-//                        {"password":"112233","name":"alex_1986","isLogged":0,"id-user":1}
-                out.writeUTF(newUserJSONString);*/
-         /*   }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-//    }
-
-/*    private static String getPassword() {
-        System.out.println("Enter your password: ");
-        try {
-            return (new BufferedReader(new InputStreamReader(System.in)).readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    private static boolean isNameVacant(String currentUserName, JSONArray allUsers) {
-        boolean flag = false;
-        for (int i = 0; i < allUsers.length(); i++) {
-            JSONObject user = allUsers.getJSONObject(i);
-            if (currentUserName.equals(user.getString("name"))) {
-                flag = false;
-                System.out.println("These nickname is already in use. Try another one.");
-                return flag;
-            } else flag = true;
-        }
-        return flag;
-    }
-    private static boolean isNewUser() {
-        System.out.println("Are you a registered user? (Y/N)");
-        String answer = null;
-        try {
-            answer = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (answer.equalsIgnoreCase("N")) {
-            return true;
-        } else return false;
-    }
-    private static String getUserName() {
-        System.out.print("Please enter your nickname: ");
-        try {
-            return (new BufferedReader(new InputStreamReader(System.in))).readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
 
 
