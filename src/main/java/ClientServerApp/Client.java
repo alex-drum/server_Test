@@ -45,20 +45,18 @@ public class Client {
         } else {
             auth(user, handler);
             response = handler.read();
-            System.out.println("Line 45: " + response);
+            System.out.println(response);
 
             while (response.startsWith("Password is invalid")) {
                 auth(user, handler);
                 response = handler.read();
-                System.out.println("Line 50: " + response);
+                System.out.println(response);
             }
             if (response.equals("You have already used all attempts. Please try in 1 hour.")) {
-//                System.out.println("Line 53: " + response);
                 return;
             }
         }
     }
-
     private static void auth(JSONObject user, Handler handler) {
 
         String password = getPassword();
@@ -88,7 +86,6 @@ public class Client {
     private static void signIn(Handler handler) {
        String name = validateName(handler);
         checkIn(name, handler);
-
     }
     private static void checkIn(String name, Handler handler) {
        String password = "";

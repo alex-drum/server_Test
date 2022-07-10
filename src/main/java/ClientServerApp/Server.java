@@ -49,33 +49,6 @@ public class Server {
         }
     }
 
-
-    private static boolean checkPassword(String name, String password) {
-        try {
-            connection = DriverManager.getConnection(url, dbUser, dbPassword);
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery("SELECT password FROM testDB.user WHERE (`name` = '" + name + "')");
-            ResultSetMetaData rsmd = resultSet.getMetaData();
-            int columnCount = rsmd.getColumnCount();
-
-            JSONObject user = new JSONObject();
-            if (resultSet.next()) {
-                for (int j = 1; j < columnCount + 1; j++) {
-                    String key = rsmd.getColumnLabel(j);
-                    user.put(key, resultSet.getObject(key));
-                }
-            }
-            if (password.equals(user.getString("password"))) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return false;
-    }
-
     private static void logIn(Handler handler) {
         String name = getUserName(handler);
 
@@ -108,9 +81,7 @@ public class Server {
                     handler.write("Password is invalid, please try again (Attempts left: " + counter + ").");
                     password = getPassword(handler);
                 }
-
             }
-
         } else {
             System.out.println("User nickname is invalid, please try again.");
             handler.write("User nickname is invalid, please try again.");
@@ -141,7 +112,31 @@ public class Server {
             handler.write("You have already used all attempts. Please try in 1 hour.");
         }
     }
+    private static boolean checkPassword(String name, String password) {
+        try {
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT password FROM testDB.user WHERE (`name` = '" + name + "')");
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            int columnCount = rsmd.getColumnCount();
 
+            JSONObject user = new JSONObject();
+            if (resultSet.next()) {
+                for (int j = 1; j < columnCount + 1; j++) {
+                    String key = rsmd.getColumnLabel(j);
+                    user.put(key, resultSet.getObject(key));
+                }
+            }
+            if (password.equals(user.getString("password"))) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
     private static int calcMinutesLeft(String name) {
         long minutesLeft = 0;
         try {
@@ -171,7 +166,6 @@ public class Server {
         int intMinutesLeft = l.intValue();
         return intMinutesLeft;
     }
-
     private static boolean checkIfUserIsNotRestricted(String name) {
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
@@ -190,10 +184,8 @@ public class Server {
                 }
             }
             if (user.has("LogInFirstAttemptTime")) {
-
                 return false;
             } else {
-                System.out.println("Return True");
                 return true;
             }
         } catch (SQLException throwables) {
@@ -201,7 +193,6 @@ public class Server {
         }
         return false;
     }
-
     private static void updateLogInTime(String name, long firstAttemptTime) {
         String query = "UPDATE `testDB`.`user` SET `LogInFirstAttemptTime` = '" + firstAttemptTime + "' WHERE (`name` = '"
                 + name + "')";
@@ -209,26 +200,22 @@ public class Server {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
             int i = statement.executeUpdate(query);
-            System.out.println("UpdateLogInTime: " + i);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
     private static String getPassword(Handler handler) {
         String userJSONString = handler.read();
         JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
         String password = user.get("password").getAsString();
         return password;
     }
-
     private static String getUserName(Handler handler) {
         String userJSONString = handler.read();
         JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
         String name = user.get("name").getAsString();
         return name;
     }
-
     private static void signIn(Handler handler) {
         String newUserJSONString = handler.read();
         JsonObject newUser = new JsonParser().parse(newUserJSONString).getAsJsonObject();
@@ -254,7 +241,6 @@ public class Server {
         }
 
     }
-
     private static void checkUser(Handler handler) {
         boolean isNameVacant = false;
         while (!isNameVacant) {
@@ -265,7 +251,6 @@ public class Server {
             handler.write(message);
         }
     }
-
     private static boolean validateNewUserName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
         boolean flag = false;
@@ -280,7 +265,6 @@ public class Server {
         }
         return flag;
     }
-
     private static boolean validateOldUserName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
         boolean flag = false;
@@ -295,7 +279,6 @@ public class Server {
         }
         return flag;
     }
-
     private static JSONArray getJSONArray(String query) {
         JSONArray jsonArray = new JSONArray();
 
