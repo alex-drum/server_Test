@@ -10,18 +10,16 @@ public class Client {
     private static final String IP = "localhost";
 
     public static void main(String[] args) {
-        try (
-                Handler handler = new Handler(IP, PORT);
-                )
+        try (Handler handler = new Handler(IP, PORT))
         {
             System.out.println("Connected to server!");
-           boolean isRegistered = checkIfRegistered(handler);
+           boolean isUserRegistered = checkIfUserRegistered(handler);
 
-            if (isRegistered) {
+            if (isUserRegistered) {
                 handler.write("/logIn");
                 logIn(handler);
             } else {
-                handler.write("/checkIn");
+                handler.write("/signIn");
                 signIn(handler);
             }
         } catch (UnknownHostException e) {
@@ -32,27 +30,53 @@ public class Client {
     }
 
     private static void logIn(Handler handler) {
-        System.out.println("Please enter your nickname: ");
-        String name = "";
-        try {name = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String name = getUserName();
+        JSONObject user = new JSONObject();
+        user.put("name", name);
 
+        handler.write(user.toString());
+        String response = handler.read();
+        System.out.println(response);
+        if (response.equals("User nickname is invalid, please try again.")) {
+            logIn(handler);
+        } else {
+            auth(user, handler);
+            response = handler.read();
+            System.out.println("String 53: " + response);
+
+            while (response.startsWith("Password is invalid")) {
+                auth(user, handler);
+                response = handler.read();
+                System.out.println("String 57: " + response);
+            }
+        }
+    }
+
+    private static void auth(JSONObject user, Handler handler) {
+
+        String password = getPassword();
+        user.put("password", password);
+        user.put("isLogged", 1);
+
+        handler.write(user.toString());
+    }
+    private static String getPassword() {
         System.out.println("Please enter your password: ");
         String password = "";
         try {password = new BufferedReader(new InputStreamReader(System.in)).readLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        JSONObject user = new JSONObject();
-        user.put("name", name);
-        user.put("password", password);
-        user.put("isLogged", 1);
-
-        handler.write(user.toString());
-        String response = handler.read();
-        System.out.println(response);
+        return password;
+    }
+    private static String getUserName() {
+        System.out.println("Please enter your nickname: ");
+        String name = "";
+        try {name = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return name;
     }
     private static void signIn(Handler handler) {
        String name = validateName(handler);
@@ -97,7 +121,7 @@ public class Client {
         }
         return null;
     }
-    private static boolean checkIfRegistered(Handler handler) {
+    private static boolean checkIfUserRegistered(Handler handler) {
         String request = "";
         while (!request.equalsIgnoreCase("S") ||
                 !request.equalsIgnoreCase("L") ) {

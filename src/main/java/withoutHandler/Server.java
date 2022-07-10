@@ -15,6 +15,9 @@ public class Server {
     private static final String url = "jdbc:mysql://localhost/testDB";
     private static final String dbUser = "root";
     private static final String dbPassword = "haizi2011";
+    private static final int COUNTS = 5;
+    private static int counter = COUNTS;
+
 
     public static String fetchUserNames = "SELECT name FROM testDB.user";
     public static String insertQuery = "INSERT INTO `testDB`.`user` (`name`, `password`, `isLogged`) VALUES ('sdffsd', 'asdadf', '1');";
@@ -34,7 +37,7 @@ public class Server {
                 ) {
                     String request = handler.read();
                     System.out.println("Request: " + request);
-                    if (request.equals("/checkIn")) {
+                    if (request.equals("/signIn")) {
                         checkUser(handler);
                         signIn(handler);
                     } else if (request.equals("/logIn")) {
@@ -50,11 +53,38 @@ public class Server {
         }
     }
 
-    private static boolean checkUserAndPassword(String name, String password,Handler handler) {
+/*    private static boolean checkUserNameAndPassword(String name, String password, Handler handler) {
+        // Check if such user exists
+        while(counter > 0) {
+            boolean isNameValid = validateOldUserName(name);
+            System.out.println("isNameValid: " + isNameValid);
+            // If user exists, proceed to check password
+            if (isNameValid) {
+                boolean isPasswordValid = checkPassword(name, password);
+                if (isPasswordValid) {
+                    return true;
+                } else {
+                    System.out.println("Password is invalid, please try again.");
+                    handler.write("Password is invalid, please try again.");
+                    counter--;
+                    System.out.println("Counter: " + counter);
+                    logIn(handler);
+                }
+            } else {
+                System.out.println("User nickname is invalid, please try again.");
+                handler.write("User nickname is invalid, please try again.");
+                counter--;
+                System.out.println("Counter: " + counter);
+                logIn(handler);
+            }
+        }
+        return false;
+    }*/
+    private static boolean checkPassword(String name, String password) {
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
-            resultSet = statement.executeQuery("SELECT * FROM testDB.user WHERE (`name` = '" + name + "')");
+            resultSet = statement.executeQuery("SELECT password FROM testDB.user WHERE (`name` = '" + name + "')");
             ResultSetMetaData rsmd = resultSet.getMetaData();
             int columnCount = rsmd.getColumnCount();
 
@@ -64,24 +94,15 @@ public class Server {
                     String key = rsmd.getColumnLabel(j);
                     user.put(key, resultSet.getObject(key));
                 }
-                System.out.println("Line67 (jsonObject to check: )" + user.toString());
             }
-            boolean isNameValid = false;
-            boolean isPasswordValid = false;
-            if (name.equals(user.getString("name"))) {
-                isNameValid = true;
-            } else {
-                System.out.println("User nickname is invalid, please try again: ");
-                handler.write("User nickname is invalid, please try again: ");
-            }
+            System.out.println("Line 96 password: " + password);
+            System.out.println("Line 97 password: " + user.getString("password"));
             if (password.equals(user.getString("password"))) {
-                isPasswordValid = true;
-            } else {
-                System.out.println("User password is invalid, please try again: ");
-                handler.write("User password is invalid, please try again: ");
-            }
-            if (isNameValid && isPasswordValid) {
+                System.out.println("Return True");
                 return true;
+            } else {
+                System.out.println("Return false");
+                return false;
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -90,15 +111,36 @@ public class Server {
     }
 
     private static void logIn(Handler handler) {
-        String userJSONString = handler.read();
-        JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
-        String name = user.get("name").getAsString();
-        String password = user.get("password").getAsString();
+        String name= getUserName(handler);
 
-        boolean isUserAndPasswordValid = checkUserAndPassword(name, password, handler);
-        if (isUserAndPasswordValid) {
+        boolean isUserNameValid = validateOldUserName(name);
+        if (isUserNameValid) {
+            System.out.println("Username is valid, please proceed with password.");
+            handler.write("Username is valid, please proceed with password.");
+            String password = getPassword(handler);
+            System.out.println("Password: " + password);
+
+            boolean isPasswordValid = false;
+            while (isPasswordValid == false && counter > 0) {
+                isPasswordValid = checkPassword(name, password);
+                if (isPasswordValid == false) {
+                    counter--;
+                    System.out.println("Password is invalid, please try again.");
+                    handler.write("Password is invalid, please try again (Attempts left: " + counter + ").");
+                    System.out.println("Counter: " + counter);
+                    password = getPassword(handler);
+                }
+
+            }
+
+        } else {
+            System.out.println("User nickname is invalid, please try again.");
+            handler.write("User nickname is invalid, please try again.");
+            logIn(handler);
+        }
+
             String query = "UPDATE `testDB`.`user` SET `isLogged` = '1' WHERE (`name` = '"
-                    + user.get("name").getAsString() + "')";
+                    + name + "')";
             System.out.println(query);
 
             try {
@@ -115,9 +157,20 @@ public class Server {
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
-        } else {
-            // TODO: прописать 10 попыток ввести логин и пароль
-        }
+
+    }
+
+    private static String getPassword(Handler handler) {
+        String userJSONString = handler.read();
+        JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
+        String password = user.get("password").getAsString();
+        return password;
+    }
+    private static String getUserName(Handler handler) {
+        String userJSONString = handler.read();
+        JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
+        String name = user.get("name").getAsString();
+        return name;
     }
     private static void signIn(Handler handler) {
         String newUserJSONString = handler.read();
@@ -149,12 +202,12 @@ public class Server {
         while (!isNameVacant) {
             String request = handler.read();
             System.out.println("Request: " + request);
-            isNameVacant = validateName(request);
+            isNameVacant = validateNewUserName(request);
             String message = new Boolean(isNameVacant).toString();
             handler.write(message);
         }
     }
-    private static boolean validateName(String name) {
+    private static boolean validateNewUserName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
         boolean flag = false;
         for (int i = 0; i < users.length(); i++) {
@@ -164,6 +217,20 @@ public class Server {
                 return flag;
             } else {
                 flag = true;
+            }
+        }
+        return flag;
+    }
+    private static boolean validateOldUserName(String name) {
+        JSONArray users = getJSONArray(fetchUserNames);
+        boolean flag = false;
+        for (int i = 0; i < users.length(); i++) {
+            JSONObject user = users.getJSONObject(i);
+            if (name.equals(user.getString("name"))) {
+                flag = true;
+                return flag;
+            } else {
+                flag = false;
             }
         }
         return flag;
