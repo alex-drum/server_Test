@@ -1,0 +1,6 @@
+[{"id-user":1, "name":"alex_1986", "password":"112233", "isLogged":0, "LogInFirstAttemptTime":0},
+ {"id-user":2, "name":"john", "password":"332211", "isLogged":0, "LogInFirstAttemptTime":0},
+ {"id-user":3, "name":"ivan", "password":"223311", "isLogged":0, "LogInFirstAttemptTime":1657483436370},
+ {"id-user":7, "name":"jack", "password":"qwerty", "isLogged":1, "LogInFirstAttemptTime":0},
+ {"id-user":8, "name":"manya", "password":"nahhh", "isLogged":0, "LogInFirstAttemptTime":0},
+ {"id-user":17, "name":"dsfgdsg", "password":"sfdfdgd", "isLogged":1, "LogInFirstAttemptTime":0}]
