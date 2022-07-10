@@ -6,7 +6,11 @@
 
     <groupId>org.example</groupId>
     <artifactId>server_Test</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>StringRevert</module>
+    </modules>
 
     <dependencies>
         <dependency>
