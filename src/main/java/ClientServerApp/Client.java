@@ -8,6 +8,8 @@ import java.net.UnknownHostException;
 public class Client {
     private static final int PORT = 8189;
     private static final String IP = "localhost";
+    private static boolean isUserAuthorized = false;
+    private static String authorizedUserName;
 
     public static void main(String[] args) {
         try (Handler handler = new Handler(IP, PORT))
@@ -22,6 +24,9 @@ public class Client {
                 handler.write("/signIn");
                 signIn(handler);
             }
+            if (isUserAuthorized) {
+                AuthorizedUser authorizedUser = new AuthorizedUser(authorizedUserName, handler);
+            }
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -30,7 +35,7 @@ public class Client {
     }
 
     private static void logIn(Handler handler) {
-        String name = getUserName();
+        String name = getAuthorizedUserName();
         JSONObject user = new JSONObject();
         user.put("name", name);
 
@@ -46,6 +51,10 @@ public class Client {
             auth(user, handler);
             response = handler.read();
             System.out.println(response);
+            if (response.equals("Log-in successful")) {
+                isUserAuthorized = true;
+                authorizedUserName = name;
+            }
 
             while (response.startsWith("Password is invalid")) {
                 auth(user, handler);
@@ -74,7 +83,7 @@ public class Client {
         }
         return password;
     }
-    private static String getUserName() {
+    private static String getAuthorizedUserName() {
         System.out.println("Please enter your nickname: ");
         String name = "";
         try {name = new BufferedReader(new InputStreamReader(System.in)).readLine();
@@ -99,9 +108,15 @@ public class Client {
        newUser.put("name", name);
        newUser.put("password", password);
        newUser.put("isLogged", 1);
+
        handler.write(newUser.toString());
        String response = handler.read();
-        System.out.println(response);
+       System.out.println(response);
+
+       if (response.equals("Check-in successful")) {
+           isUserAuthorized = true;
+           authorizedUserName = name;
+       }
     }
     private static String validateName(Handler handler) {
         String isVacant = "";
