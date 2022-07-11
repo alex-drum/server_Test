@@ -17,8 +17,10 @@ public class Handler implements Closeable {
             this.reader = createReader();
             this.writer = createWriter();
         } catch (UnknownHostException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         } catch (IOException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         }
     }
@@ -29,6 +31,7 @@ public class Handler implements Closeable {
             this.reader = createReader();
             this.writer = createWriter();
         } catch (IOException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         }
     }
@@ -39,7 +42,7 @@ public class Handler implements Closeable {
             writer.newLine();
             writer.flush();
         } catch (IOException e) {
-            throw new RuntimeException();
+            new MyException(e).print();
         }
     }
 
@@ -47,6 +50,7 @@ public class Handler implements Closeable {
         try {
             return reader.readLine();
         } catch (IOException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         }
     }
@@ -55,6 +59,7 @@ public class Handler implements Closeable {
         try {
             return new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         } catch (IOException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         }
     }
@@ -63,6 +68,7 @@ public class Handler implements Closeable {
         try {
             return new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
+            new MyException(e).print();
             throw new RuntimeException();
         }
     }

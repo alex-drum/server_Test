@@ -28,9 +28,9 @@ public class Client {
                 AuthorizedUser authorizedUser = new AuthorizedUser(authorizedUserName, handler);
             }
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         } catch (IOException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
     }
 
@@ -41,7 +41,6 @@ public class Client {
 
         handler.write(user.toString());
         String response = handler.read();
-        System.out.println(response);
         if (response.startsWith("You have no attempts left.")) {
             return;
         }
@@ -79,7 +78,7 @@ public class Client {
         String password = "";
         try {password = new BufferedReader(new InputStreamReader(System.in)).readLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
         return password;
     }
@@ -88,7 +87,7 @@ public class Client {
         String name = "";
         try {name = new BufferedReader(new InputStreamReader(System.in)).readLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
         return name;
     }
@@ -102,7 +101,7 @@ public class Client {
        try {
            password = new BufferedReader(new InputStreamReader(System.in)).readLine();
        } catch (IOException e) {
-           e.printStackTrace();
+           new MyException(e).print();
        }
         JSONObject newUser = new JSONObject();
        newUser.put("name", name);
@@ -126,7 +125,7 @@ public class Client {
             try {
                 name = new BufferedReader(new InputStreamReader(System.in)).readLine();
             } catch (IOException e) {
-                e.printStackTrace();
+                new MyException(e).print();
             }
             handler.write(name);
             isVacant = handler.read();
@@ -148,7 +147,7 @@ public class Client {
             try {
                 request = new BufferedReader(new InputStreamReader(System.in)).readLine();
             } catch (IOException e) {
-                e.printStackTrace();
+                new MyException(e).print();
             }
             if (request.equalsIgnoreCase("S")) {
                 return false;

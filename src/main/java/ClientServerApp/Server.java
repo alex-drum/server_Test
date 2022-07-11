@@ -29,16 +29,13 @@ public class Server {
             System.out.println("Server started.");
 
             while (true) {
-                System.out.println("Line32, while started");
+                System.out.println("Server is waiting for connection.");
                 try (
                         Handler handler = new Handler(server);
                 ) {
                     while (true) {
-
-                        System.out.println("Line38, Waiting for request");
                         String request = handler.read();
-                        System.out.println("Line40 Request: " + request);
-                        if (request.equals("/signIn")) {
+                   /*     if (request.equals("/signIn")) {
                             checkUser(handler);
                             signIn(handler);
                         } else if (request.equals("/logIn")) {
@@ -56,31 +53,38 @@ public class Server {
                             editPetInfo(handler);
                         } else if (request.equals("/deletePet")) {
                             deletePet(handler);
+                        }*/
+                        switch (request) {
+                            case "/signIn":
+                                checkUser(handler);
+                                signIn(handler);
+                                break;
+                            case "/logIn":
+                                logIn(handler);
+                                break;
+                            case "/getPetsArray":
+                                getPetsArray(handler);
+                                break;
+                            case "/getPetOnID":
+                                getPetOnID(handler);
+                                break;
+                            case "/createNewPet":
+                                createNewPet(handler);
+                            case "/editPetInfo":
+                                editPetInfo(handler);
+                            case "/deletePet":
+                                deletePet(handler);
+                            case "/closeConnection":
+                                System.out.println("Client closed connection");
+                                break;
                         }
-
-
                     }
-//                    switch (request) {
-//                        case "/signIn":
-//                            checkUser(handler);
-//                            signIn(handler);
-////                            break;
-//                        case "/logIn":
-//                            logIn(handler);
-////                            break;
-//                        case "/getPetsArray":
-//                            getPetsArray(handler);
-////                            break;
-//                        case "/getPetOnID":
-//                            getPetOnID(handler);
-////                            break;
-//                    }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    new MyException(e).print();
                 }
             }
-        } catch (IOException ex) {
-            System.out.println("WithHandler_Error.Server error");
+        } catch (IOException e) {
+            new MyException(e).print();
         }
     }
 
@@ -96,20 +100,19 @@ public class Server {
         JsonObject pet = new JsonParser().parse(petJSONString).getAsJsonObject();
 
         query = "DELETE FROM `testDB`.`pet` WHERE (`idPet` = '"
-                        + pet.get("idPet").getAsString() + "')";
+                + pet.get("idPet").getAsString() + "')";
 
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
             int i = statement.executeUpdate(query);
-            System.out.println("L98 (query result: " + i);
 
             if (i == 1) {
                 System.out.println("Pet info is successfully deleted!");
                 handler.write("Pet info is successfully deleted!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
 
     }
@@ -123,20 +126,18 @@ public class Server {
         handler.write(petsArray.toString());
 
         String editedPetString = handler.read();
-        System.out.println(editedPetString);
         JsonObject editedPet = new JsonParser().parse(editedPetString).getAsJsonObject();
 
         query = "UPDATE `testDB`.`pet` SET `birthday` = '" +
                 editedPet.get("birthday").getAsString() + "', `sex` = '" +
                 editedPet.get("sex").getAsString() + "', `petName` = '" +
                 editedPet.get("petName").getAsString() + "' WHERE (`idPet` = '" +
-                editedPet.get("idPet").getAsString() +"')";
+                editedPet.get("idPet").getAsString() + "')";
 
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
             statement = connection.createStatement();
             int i = statement.executeUpdate(query);
-            System.out.println("L110 (query result: " + i);
 
             if (i == 1) {
                 System.out.println("Pet info if successfully edited!");
@@ -189,7 +190,7 @@ public class Server {
         handler.write(petsArray.toString());
     }
 
-    private static void logIn(Handler handler) {
+    private static void logIn(Handler handler){
         String name = getUserName(handler);
 
         boolean isUserNameValid = validateOldUserName(name);
@@ -244,8 +245,8 @@ public class Server {
                     System.out.println("ROW NOT UPDATED");
                     handler.write("Log-in failed");
                 }
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            } catch (SQLException e) {
+                new MyException(e).print();
             }
         } else {
             System.out.println("You have already used all attempts. Please try in 1 hour.");
@@ -273,8 +274,8 @@ public class Server {
             } else {
                 return false;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            new MyException(e).print();
         }
         return false;
     }
@@ -302,7 +303,7 @@ public class Server {
                 minutesLeft = 60 - TimeUnit.MILLISECONDS.toMinutes(currentTime - firstAttemptTime);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
         Long l = new Long(minutesLeft);
         int intMinutesLeft = l.intValue();
@@ -315,9 +316,7 @@ public class Server {
             statement = connection.createStatement();
             resultSet = statement.executeQuery("SELECT LogInFirstAttemptTime FROM testDB.user WHERE (`name` = '" + name + "')");
             ResultSetMetaData rsmd = resultSet.getMetaData();
-            System.out.println(rsmd.toString());
             int columnCount = rsmd.getColumnCount();
-            System.out.println(columnCount);
 
             JSONObject user = new JSONObject();
             if (resultSet.next()) {
@@ -331,8 +330,8 @@ public class Server {
             } else {
                 return true;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            new MyException(e).print();
         }
         return false;
     }
@@ -345,7 +344,7 @@ public class Server {
             statement = connection.createStatement();
             int i = statement.executeUpdate(query);
         } catch (SQLException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
     }
 
@@ -383,8 +382,8 @@ public class Server {
                 System.out.println("ROW NOT INSERTED");
                 handler.write("Check-in failed");
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            new MyException(e).print();
         }
 
     }
@@ -450,7 +449,7 @@ public class Server {
                 i++;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
         return jsonArray;
     }

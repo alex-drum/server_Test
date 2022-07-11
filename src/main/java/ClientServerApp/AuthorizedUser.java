@@ -90,7 +90,7 @@ public class AuthorizedUser {
             System.out.print("Please enter new sex (M/F): ");
             sex = new BufferedReader(new InputStreamReader(System.in)).readLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
 
         pet.addProperty("idPet", petID);
@@ -98,7 +98,6 @@ public class AuthorizedUser {
         pet.addProperty("birthday", birthday);
         pet.addProperty("sex", sex);
         pet.addProperty("petOwner", userName);
-        System.out.println("L84 pet: " + pet);
 
         handler.write(pet.toString());
         String response = handler.read();
@@ -119,7 +118,7 @@ public class AuthorizedUser {
             System.out.print("Enter pet sex (M/F): ");
             sex = new BufferedReader(new InputStreamReader(System.in)).readLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            new MyException(e).print();
         }
         JsonObject newPet = new JsonObject();
         newPet.addProperty("petOwner", userName);
@@ -153,11 +152,9 @@ public class AuthorizedUser {
         JsonArray petsArray = new JsonArray();
         JSONObject user = new JSONObject();
         user.put("petOwner", this.userName);
-        System.out.println("Line69: " + user);
         handler.write(user.toString());
 
         String petsString = handler.read();
-        System.out.println("Line73: " + petsString);
         petsString = petsString.replace("},{", "};{");
         petsString = petsString.replace("[", "");
         petsString = petsString.replace("]", "");
