@@ -29,17 +29,47 @@ public class Server {
             System.out.println("Server started.");
 
             while (true) {
+                System.out.println("Line32, while started");
                 try (
                         Handler handler = new Handler(server);
                 ) {
-                    String request = handler.read();
-                    System.out.println("Request: " + request);
-                    if (request.equals("/signIn")) {
-                        checkUser(handler);
-                        signIn(handler);
-                    } else if (request.equals("/logIn")) {
-                        logIn(handler);
+                    while (true) {
+
+                        System.out.println("Line38, Waiting for request");
+                        String request = handler.read();
+                        System.out.println("Line40 Request: " + request);
+                        if (request.equals("/signIn")) {
+                            checkUser(handler);
+                            signIn(handler);
+                        } else if (request.equals("/logIn")) {
+                            logIn(handler);
+                        } else if (request.equals("/getPetsArray")) {
+                            getPetsArray(handler);
+                        } else if (request.equals("/getPetOnID")) {
+                            getPetOnID(handler);
+                        } else if (request.equals("/closeConnection")) {
+                            System.out.println("Client closed connection");
+                            break;
+                        } else if (request.equals("/createNewPet")) {
+                            createNewPet(handler);
+                        }
+
                     }
+//                    switch (request) {
+//                        case "/signIn":
+//                            checkUser(handler);
+//                            signIn(handler);
+////                            break;
+//                        case "/logIn":
+//                            logIn(handler);
+////                            break;
+//                        case "/getPetsArray":
+//                            getPetsArray(handler);
+////                            break;
+//                        case "/getPetOnID":
+//                            getPetOnID(handler);
+////                            break;
+//                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -47,6 +77,48 @@ public class Server {
         } catch (IOException ex) {
             System.out.println("WithHandler_Error.Server error");
         }
+    }
+
+    private void createNewPet(Handler handler) {
+        String newPetString = handler.read();
+        JsonObject newPetJSON = new JsonParser().parse(newPetString).getAsJsonObject();
+
+        String query = "INSERT INTO `testDB`.`pet` " +
+                "(`birthday`, `sex`, `petName`, `petOwner`) VALUES ('" +
+                newPetJSON.get("birthday").getAsString() + "', '"
+                + newPetJSON.get("sex").getAsString() +
+                "', '" + newPetJSON.get("petName").getAsString() + "', '" +
+                newPetJSON.get("petOwner").getAsString() + "')";
+
+        try {
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
+            statement = connection.createStatement();
+            int i = statement.executeUpdate(query);
+            if (i == 1) {
+                System.out.println("New pet successfully created!");
+                handler.write("New pet successfully created!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getPetOnID(Handler handler) {
+        String petOwnerString = handler.read();
+        JsonObject pet = new JsonParser().parse(petOwnerString).getAsJsonObject();
+
+        String query = "SELECT * FROM testDB.pet WHERE (`idPet` = '" + pet.get("idPet").getAsString() + "')";
+        JSONArray petsArray = getJSONArray(query);
+        handler.write(petsArray.toString());
+    }
+
+    private void getPetsArray(Handler handler) {
+        String petOwnerString = handler.read();
+        JsonObject user = new JsonParser().parse(petOwnerString).getAsJsonObject();
+
+        String query = "SELECT * FROM testDB.pet WHERE (`petOwner` = '" + user.get("petOwner").getAsString() + "')";
+        JSONArray petsArray = getJSONArray(query);
+        handler.write(petsArray.toString());
     }
 
     private static void logIn(Handler handler) {
@@ -112,6 +184,7 @@ public class Server {
             handler.write("You have already used all attempts. Please try in 1 hour.");
         }
     }
+
     private static boolean checkPassword(String name, String password) {
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
@@ -137,6 +210,7 @@ public class Server {
         }
         return false;
     }
+
     private static int calcMinutesLeft(String name) {
         long minutesLeft = 0;
         try {
@@ -166,6 +240,7 @@ public class Server {
         int intMinutesLeft = l.intValue();
         return intMinutesLeft;
     }
+
     private static boolean checkIfUserIsNotRestricted(String name) {
         try {
             connection = DriverManager.getConnection(url, dbUser, dbPassword);
@@ -193,6 +268,7 @@ public class Server {
         }
         return false;
     }
+
     private static void updateLogInTime(String name, long firstAttemptTime) {
         String query = "UPDATE `testDB`.`user` SET `LogInFirstAttemptTime` = '" + firstAttemptTime + "' WHERE (`name` = '"
                 + name + "')";
@@ -204,18 +280,21 @@ public class Server {
             e.printStackTrace();
         }
     }
+
     private static String getPassword(Handler handler) {
         String userJSONString = handler.read();
         JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
         String password = user.get("password").getAsString();
         return password;
     }
+
     private static String getUserName(Handler handler) {
         String userJSONString = handler.read();
         JsonObject user = new JsonParser().parse(userJSONString).getAsJsonObject();
         String name = user.get("name").getAsString();
         return name;
     }
+
     private static void signIn(Handler handler) {
         String newUserJSONString = handler.read();
         JsonObject newUser = new JsonParser().parse(newUserJSONString).getAsJsonObject();
@@ -241,6 +320,7 @@ public class Server {
         }
 
     }
+
     private static void checkUser(Handler handler) {
         boolean isNameVacant = false;
         while (!isNameVacant) {
@@ -251,6 +331,7 @@ public class Server {
             handler.write(message);
         }
     }
+
     private static boolean validateNewUserName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
         boolean flag = false;
@@ -265,6 +346,7 @@ public class Server {
         }
         return flag;
     }
+
     private static boolean validateOldUserName(String name) {
         JSONArray users = getJSONArray(fetchUserNames);
         boolean flag = false;
@@ -279,6 +361,7 @@ public class Server {
         }
         return flag;
     }
+
     private static JSONArray getJSONArray(String query) {
         JSONArray jsonArray = new JSONArray();
 
