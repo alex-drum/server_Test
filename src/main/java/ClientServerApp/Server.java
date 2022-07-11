@@ -52,7 +52,12 @@ public class Server {
                             break;
                         } else if (request.equals("/createNewPet")) {
                             createNewPet(handler);
+                        } else if (request.equals("/editPetInfo")) {
+                            editPetInfo(handler);
+                        } else if (request.equals("/deletePet")) {
+                            deletePet(handler);
                         }
+
 
                     }
 //                    switch (request) {
@@ -76,6 +81,69 @@ public class Server {
             }
         } catch (IOException ex) {
             System.out.println("WithHandler_Error.Server error");
+        }
+    }
+
+    private void deletePet(Handler handler) {
+        String petOwner = handler.read();
+        JsonObject user = new JsonParser().parse(petOwner).getAsJsonObject();
+
+        String query = "SELECT * FROM testDB.pet WHERE (`petOwner` = '" + user.get("petOwner").getAsString() + "')";
+        JSONArray petsArray = getJSONArray(query);
+        handler.write(petsArray.toString());
+
+        String petJSONString = handler.read();
+        JsonObject pet = new JsonParser().parse(petJSONString).getAsJsonObject();
+
+        query = "DELETE FROM `testDB`.`pet` WHERE (`idPet` = '"
+                        + pet.get("idPet").getAsString() + "')";
+
+        try {
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
+            statement = connection.createStatement();
+            int i = statement.executeUpdate(query);
+            System.out.println("L98 (query result: " + i);
+
+            if (i == 1) {
+                System.out.println("Pet info is successfully deleted!");
+                handler.write("Pet info is successfully deleted!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void editPetInfo(Handler handler) {
+        String petOwner = handler.read();
+        JsonObject user = new JsonParser().parse(petOwner).getAsJsonObject();
+
+        String query = "SELECT * FROM testDB.pet WHERE (`petOwner` = '" + user.get("petOwner").getAsString() + "')";
+        JSONArray petsArray = getJSONArray(query);
+        handler.write(petsArray.toString());
+
+        String editedPetString = handler.read();
+        System.out.println(editedPetString);
+        JsonObject editedPet = new JsonParser().parse(editedPetString).getAsJsonObject();
+
+        query = "UPDATE `testDB`.`pet` SET `birthday` = '" +
+                editedPet.get("birthday").getAsString() + "', `sex` = '" +
+                editedPet.get("sex").getAsString() + "', `petName` = '" +
+                editedPet.get("petName").getAsString() + "' WHERE (`idPet` = '" +
+                editedPet.get("idPet").getAsString() +"')";
+
+        try {
+            connection = DriverManager.getConnection(url, dbUser, dbPassword);
+            statement = connection.createStatement();
+            int i = statement.executeUpdate(query);
+            System.out.println("L110 (query result: " + i);
+
+            if (i == 1) {
+                System.out.println("Pet info if successfully edited!");
+                handler.write("Pet info if successfully edited!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
